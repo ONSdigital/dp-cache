@@ -1,0 +1,13 @@
+dp-search-reindex-api
+/build
+
+# Mac
+.DS_Store
+
+#VSCode
+.vscode
+
+# Intellij
+.idea/
+*.iml
+*.iws
