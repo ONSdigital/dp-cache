@@ -1,6 +1,6 @@
 # dp-cache
 
-dp-cache is a library which provides functionality for a service to cache data by creating a cache object which contains the data (stored in memory), the update interval for how often the cache should be updated and uses channels for the service to communicate with the cache
+dp-cache is a library which provides functionality for a service to cache data by creating a cache object which contains the data (stored in memory). The update interval is used to define how often the cache should be updated and the use of Go channels for the application to update the cache object.
 
 ```go
 // Cache contains all the information to start, update and close caching data
