@@ -135,7 +135,7 @@ func UpdateTopic(ctx context.Context, topicClient topicCli.Clienter) func() *cac
 
 #### a. Create a cache object using func in [Step 1a](#a-add-a-wrapper-new-cache-function)
 
-- Create the cache object where you initialise the service (usually `service.go` file)
+- Create the cache object where you initialise the service (usually `service.go` file in DP apps)
 
 ##### Example
 
