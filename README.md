@@ -95,7 +95,7 @@ func (dc *TopicCache) GetData(ctx context.Context, key string) (*Topic, error) {
 }
 ```
 
-Please note that, in the example above, an empty object is returned in the event of an error. A nil value can be returned as well. Implement the function according to what is best for the app
+Please note that, in the example above, an empty object is returned in the event of an error. A nil value can be returned as well. Implement the function according to what is best for the app.
 
 #### c. Add a wrapper AddUpdateFunc
 
