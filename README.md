@@ -187,6 +187,8 @@ svc.Cache.CensusTopic, err = cache.NewTopicCache(ctx, &cfg.CacheCensusTopicUpdat
     svc.Cache.CensusTopic.Close()
 ```
 
+The above should be added in the function where we close the service (usually in `service.Close` function (graceful shutdown) in `service.go` file in DP apps). Closing the cache should be one of the last steps in the graceful shutdown.
+
 ## Examples
 
 Examples of caching implementation in services can be found below:
