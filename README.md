@@ -57,7 +57,7 @@ func NewTopicCache(ctx context.Context, updateInterval *time.Duration) (*TopicCa
         return nil, err
     }
 
-    topicCache := &TopicCache{cache}
+    return &TopicCache{cache}, nil
 
     return topicCache, nil
 }
