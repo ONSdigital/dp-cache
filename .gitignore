@@ -3,6 +3,7 @@ dp-search-reindex-api
 
 # Mac
 .DS_Store
+examples/.DS_Store
 
 #VSCode
 .vscode
