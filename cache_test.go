@@ -197,7 +197,7 @@ func TestAddUpdateFunc(t *testing.T) {
 		}
 
 		Convey("When AddUpdateFunc is called", func() {
-			testCache.AddUpdateFunc(teastVal, updateFunc)
+			testCache.AddUpdateFunc(testVal, updateFunc)
 
 			Convey("Then the update function is added to the cache", func() {
 				So(testCache.UpdateFuncs[testVal], ShouldNotBeEmpty)
@@ -369,7 +369,7 @@ func TestStartUpdates(t *testing.T) {
 
 			Convey("Then cache data should not be updated", func() {
 				cacheStringValue, ok := testCache.Get("string")
-				So(cacheStringValue, ShouldEqual, teastVal)
+				So(cacheStringValue, ShouldEqual, testVal)
 				So(ok, ShouldBeTrue)
 
 				cacheIntValue, ok := testCache.Get("int")
