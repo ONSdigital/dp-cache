@@ -1,3 +1,5 @@
+BUILD=build
+
 .PHONY: all
 all: audit test build
 
@@ -25,3 +27,7 @@ lint:
 .PHONY: test
 test:
 	go test -race -cover ./...
+
+.PHONY: topic-example
+topic-example:
+	HUMAN_LOG=1 go run -race examples/topic-example/main.go

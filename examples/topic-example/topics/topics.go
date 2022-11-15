@@ -1,4 +1,4 @@
-package local_cache
+package topics
 
 import (
 	"context"
@@ -75,16 +75,40 @@ func (dc *TopicCache) AddUpdateFunc(key string, updateFunc func() *TopicItem) {
 	}
 }
 
+var count = 0
+
 func UpdateTopic() func() *TopicItem {
 	return func() *TopicItem {
-		// add logic to get topic from dp-topic-api
+		// add logic to get topic data
+		var subTopicItem SubTopicItem
+		if count == 0 {
+			subTopicItem = SubTopicItem{
+				ID:   8341,
+				Name: "age",
+			}
+			count = 1
+		} else if count == 1 {
+			subTopicItem = SubTopicItem{
+				ID:   2223,
+				Name: "Migration",
+			}
+			count = 2
+		} else if count == 2 {
+			subTopicItem = SubTopicItem{
+				ID:   7845,
+				Name: "Sex",
+			}
+			count = 0
+		}
 
 		mockClient := func() *TopicItem {
 			MOCK_API_CLIENT_ID++
 			return &TopicItem{
-				ID:        MOCK_API_CLIENT_ID,
-				Name:      "Census",
-				SubTopics: nil,
+				ID:   MOCK_API_CLIENT_ID,
+				Name: "Census",
+				SubTopics: []SubTopicItem{
+					subTopicItem,
+				},
 			}
 		}
 

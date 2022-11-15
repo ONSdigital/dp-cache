@@ -1,10 +1,8 @@
-# Example Caching Server
+# Examples of Caching Server
 
-### Install & Start server
-```
-go get
-go run main.go
-```
+This folder contains several examples of how to use the dp-cache library
 
-Navigate to [http://127.0.0.1:4242/topic](http://127.0.0.1:4242/topic)
-Page will update the topic ID every 5 seconds.
+## Contents
+
+- [Topic Example](./topic-example/README.md)
+  

@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	local_cache "github.com/ONSdigital/dp-cache/examples/local_cache"
+	topic "github.com/ONSdigital/dp-cache/examples/topic-example/topics"
 )
 
 func handlerOne(w http.ResponseWriter, r *http.Request) {}
 
 const (
-	PORT = 4242
+	PORT  = 4242
+	route = "/topic"
 )
 
 func main() {
@@ -27,9 +28,9 @@ func main() {
 	errChan := make(chan error)
 	interval := 5 * time.Second
 	// Step #2a
-	topicCache, _ := local_cache.NewTopicCache(ctx, &interval)
+	topicCache, _ := topic.NewTopicCache(ctx, &interval)
 	// Step #2b
-	topicCache.AddUpdateFunc("main_topic", local_cache.UpdateTopic())
+	topicCache.AddUpdateFunc("main_topic", topic.UpdateTopic())
 	// Step #2c
 	go topicCache.StartUpdates(ctx, errChan)
 
@@ -45,8 +46,12 @@ func main() {
 			h(w, r)
 		}
 	}
+
 	// Handlers
-	http.HandleFunc("/topic", middleware(handlerOne))
+	http.HandleFunc(route, middleware(handlerOne))
+
+	log.Printf("Hit the following  %s%s\n", uri, route)
+
 	// Start server
 	err := server.ListenAndServe()
 	if err != nil {
