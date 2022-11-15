@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-cache
 
-go 1.18
+go 1.19
 
 replace golang.org/x/text => golang.org/x/text v0.3.7
 
@@ -20,4 +20,5 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/smartystreets/assertions v1.13.0 // indirect
 	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e // indirect
+	golang.org/x/text v0.4.0 // indirect
 )
