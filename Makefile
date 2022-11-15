@@ -1,3 +1,5 @@
+BUILD=build
+
 .PHONY: all
 all: audit test build
 
@@ -19,9 +21,13 @@ fmt:
 
 .PHONY: lint
 lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 	golangci-lint run ./...
 
 .PHONY: test
 test:
 	go test -race -cover ./...
+
+.PHONY: topic-example
+topic-example:
+	HUMAN_LOG=1 go run -race examples/topic-example/main.go

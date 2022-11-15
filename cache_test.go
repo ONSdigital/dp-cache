@@ -10,6 +10,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const testVal = "test"
+
 func getTestCache(config Config) *Cache {
 	testCache := Cache{
 		data:        sync.Map{},
@@ -18,7 +20,7 @@ func getTestCache(config Config) *Cache {
 		UpdateFuncs: make(map[string]func() (interface{}, error)),
 	}
 
-	testCache.data.Store("string", "test")
+	testCache.data.Store("string", testVal)
 	testCache.data.Store("int", 1)
 	testCache.data.Store("bool", false)
 	testCache.data.Store("float", 1.1)
@@ -27,7 +29,7 @@ func getTestCache(config Config) *Cache {
 		val, ok := testCache.Get("string")
 
 		// the first update
-		if ok && val == "test" {
+		if ok && val == testVal {
 			return "test2", nil
 		}
 
@@ -191,15 +193,15 @@ func TestAddUpdateFunc(t *testing.T) {
 
 		testCache := getTestCache(config)
 		updateFunc := func() (interface{}, error) {
-			return "test", nil
+			return testVal, nil
 		}
 
 		Convey("When AddUpdateFunc is called", func() {
-			testCache.AddUpdateFunc("test", updateFunc)
+			testCache.AddUpdateFunc(testVal, updateFunc)
 
 			Convey("Then the update function is added to the cache", func() {
-				So(testCache.UpdateFuncs["test"], ShouldNotBeEmpty)
-				So(testCache.UpdateFuncs["test"], ShouldEqual, updateFunc)
+				So(testCache.UpdateFuncs[testVal], ShouldNotBeEmpty)
+				So(testCache.UpdateFuncs[testVal], ShouldEqual, updateFunc)
 			})
 		})
 	})
@@ -367,7 +369,7 @@ func TestStartUpdates(t *testing.T) {
 
 			Convey("Then cache data should not be updated", func() {
 				cacheStringValue, ok := testCache.Get("string")
-				So(cacheStringValue, ShouldEqual, "test")
+				So(cacheStringValue, ShouldEqual, testVal)
 				So(ok, ShouldBeTrue)
 
 				cacheIntValue, ok := testCache.Get("int")

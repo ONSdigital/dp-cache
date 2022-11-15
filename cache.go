@@ -10,6 +10,8 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
+//go:generate moq -out mocks/cache.go -pkg mocks . Cacher
+
 // Cacher defines the required methods to initialise a cache
 type Cacher interface {
 	Close()
