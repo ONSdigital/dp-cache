@@ -15,7 +15,10 @@ import (
 )
 
 type Helper struct {
-	Clienter client.Clienter
+	Clienter  client.Clienter
+	Config    Config
+	CacheList cache.List
+	Clients   *client.Clients
 }
 
 type Config struct {
@@ -29,54 +32,60 @@ type Config struct {
 	ServiceAuthToken            string
 }
 
-func Init(ctx context.Context, cfg Config, svcErrors chan error) (helper *Helper, err error) {
+func Init(ctx context.Context, cfg Config) (svc *Helper, err error) {
 
-	cacheList := cache.List{}
-	clients := &client.Clients{
+	svc = &Helper{}
+	svc.CacheList = cache.List{}
+	svc.Clients = &client.Clients{
 		Topic: topicCli.New(cfg.APIRouterURL),
 	}
-	helper = &Helper{}
+	svc.Config = cfg
 
-	if cfg.IsPublishingMode {
-		helper.Clienter = client.NewPublishingClient(ctx, clients, cfg.Languages)
+	if svc.Config.IsPublishingMode {
+		svc.Clienter = client.NewPublishingClient(ctx, svc.Clients, cfg.Languages)
 	} else {
-		helper.Clienter, err = client.NewWebClient(ctx, clients, cfg.CacheUpdateInterval, cfg.Languages)
+		svc.Clienter, err = client.NewWebClient(ctx, svc.Clients, cfg.CacheUpdateInterval, cfg.Languages)
 		if err != nil {
 			log.Fatal(ctx, "failed to create homepage web client", err)
 			return
 		}
 	}
-	if err = helper.Clienter.AddNavigationCache(ctx, cfg.CacheUpdateInterval); err != nil {
+	if err = svc.Clienter.AddNavigationCache(ctx, cfg.CacheUpdateInterval); err != nil {
 		log.Fatal(ctx, "failed to add navigation cache to homepage client", err)
 		return
 	}
-	// Start background polling of topics API for navbar data (changes)
-	go helper.Clienter.StartBackgroundUpdate(ctx, svcErrors)
 
-	if cfg.EnableCensusTopicSubsection {
+	if svc.Config.EnableCensusTopicSubsection {
 		// Initialise caching census topics
-		cache.CensusTopicID = cfg.CensusTopicID
-		cacheList.CensusTopic, err = cache.NewTopicCache(ctx, &cfg.CacheUpdateInterval)
+		cache.CensusTopicID = svc.Config.CensusTopicID
+		svc.CacheList.CensusTopic, err = cache.NewTopicCache(ctx, &svc.Config.CacheUpdateInterval)
 		if err != nil {
 			log.Error(ctx, "failed to create topics cache", err)
 			return
 		}
 
-		if cfg.IsPublishingMode {
-			if err = cacheList.CensusTopic.AddUpdateFunc(ctx, cache.CensusTopicID, cachePrivate.UpdateCensusTopic(ctx, cfg.CensusTopicID, cfg.ServiceAuthToken, clients.Topic)); err != nil {
+		if svc.Config.IsPublishingMode {
+			if err = svc.CacheList.CensusTopic.AddUpdateFunc(ctx, cache.CensusTopicID, cachePrivate.UpdateCensusTopic(ctx, svc.Config.CensusTopicID, svc.Config.ServiceAuthToken, svc.Clients.Topic)); err != nil {
 				log.Error(ctx, "failed to create topics cache", err)
 				return
 			}
 		} else {
-			if err = cacheList.CensusTopic.AddUpdateFunc(ctx, cache.CensusTopicID, cachePublic.UpdateCensusTopic(ctx, cfg.CensusTopicID, clients.Topic)); err != nil {
+			if err = svc.CacheList.CensusTopic.AddUpdateFunc(ctx, cache.CensusTopicID, cachePublic.UpdateCensusTopic(ctx, svc.Config.CensusTopicID, svc.Clients.Topic)); err != nil {
 				log.Error(ctx, "failed to create topics cache", err)
 				return
 			}
 		}
-
-		go cacheList.CensusTopic.StartUpdates(ctx, svcErrors)
 	}
 	return
+}
+
+func (svc *Helper) RunUpdates(ctx context.Context, svcErrors chan error) {
+	// Start background polling of topics API for navbar data (changes)
+	go svc.Clienter.StartBackgroundUpdate(ctx, svcErrors)
+
+	if svc.Config.EnableCensusTopicSubsection {
+		go svc.CacheList.CensusTopic.StartUpdates(ctx, svcErrors)
+	}
 }
 
 func (svc *Helper) GetMappedNavigationContent(ctx context.Context, lang string) (content []model.NavigationItem, err error) {
