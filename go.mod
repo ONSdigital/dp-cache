@@ -1,23 +1,26 @@
 module github.com/ONSdigital/dp-cache
 
-go 1.18
-
-replace golang.org/x/text => golang.org/x/text v0.3.7
+go 1.23
 
 require (
-	github.com/ONSdigital/log.go/v2 v2.3.0-beta
-	github.com/smartystreets/goconvey v1.7.2
+	github.com/ONSdigital/log.go/v2 v2.4.3
+	github.com/smartystreets/goconvey v1.8.1
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0 // indirect
-	github.com/ONSdigital/dp-net/v2 v2.5.0-beta // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.261.0 // indirect
+	github.com/ONSdigital/dp-net/v2 v2.11.2 // indirect
+	github.com/fatih/color v1.18.0 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/smartystreets/assertions v1.13.0 // indirect
-	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/smarty/assertions v1.16.0 // indirect
+	go.opentelemetry.io/otel v1.27.0 // indirect
+	go.opentelemetry.io/otel/metric v1.27.0 // indirect
+	go.opentelemetry.io/otel/trace v1.27.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 )
