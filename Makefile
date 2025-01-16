@@ -1,5 +1,5 @@
 .PHONY: all
-all: audit test build
+all: audit lint test build
 
 .PHONY: audit
 audit:
@@ -19,7 +19,7 @@ fmt:
 
 .PHONY: lint
 lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.63.0
 	golangci-lint run ./...
 
 .PHONY: test
