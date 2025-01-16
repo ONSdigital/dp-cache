@@ -79,7 +79,7 @@ func (dc *Cache) AddUpdateFunc(key string, updateFunc func() (interface{}, error
 }
 
 // UpdateContent calls all the update functions with a key value stored in the Cache to update the relevant data with the same key values
-func (dc *Cache) UpdateContent(ctx context.Context) error {
+func (dc *Cache) UpdateContent(_ context.Context) error {
 	for key, updateFunc := range dc.UpdateFuncs {
 		updatedContent, err := updateFunc()
 		if err != nil {
@@ -90,12 +90,42 @@ func (dc *Cache) UpdateContent(ctx context.Context) error {
 	return nil
 }
 
-// StartUpdates informs the cache to start updating the cache data once called and then at every update interval which was configured when setting up the cache
+// StartUpdates informs the cache to start updating the cache data at every update interval which was configured when setting up the cache
 func (dc *Cache) StartUpdates(ctx context.Context, errorChannel chan error) {
 	if len(dc.UpdateFuncs) == 0 {
 		return
 	}
 
+	if dc.config.UpdateInterval != nil {
+		// Create a new goroutine to handle periodic updates with the specified interval
+		go func() {
+			ticker := time.NewTicker(*dc.config.UpdateInterval)
+			defer ticker.Stop()
+
+			// Wait for the first ticker and handle periodic updates
+			for {
+				select {
+				case <-ticker.C:
+					err := dc.UpdateContent(ctx)
+					if err != nil {
+						log.Error(ctx, err.Error(), err)
+						errorChannel <- err
+					}
+
+				case <-dc.close:
+					return
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
+}
+
+// StartAndManageUpdates performs an initial synchronous cache update once called
+// and then hands over control to the cache to manage periodic updates asynchronously.
+func (dc *Cache) StartAndManageUpdates(ctx context.Context, errorChannel chan error) {
+	// Step 1: Perform the initial synchronous cache update
 	err := dc.UpdateContent(ctx)
 	if err != nil {
 		errorChannel <- err
@@ -103,22 +133,6 @@ func (dc *Cache) StartUpdates(ctx context.Context, errorChannel chan error) {
 		return
 	}
 
-	if dc.config.UpdateInterval != nil {
-		ticker := time.NewTicker(*dc.config.UpdateInterval)
-
-		for {
-			select {
-			case <-ticker.C:
-				err := dc.UpdateContent(ctx)
-				if err != nil {
-					log.Error(ctx, err.Error(), err)
-				}
-
-			case <-dc.close:
-				return
-			case <-ctx.Done():
-				return
-			}
-		}
-	}
+	// Step 2: Start periodic updates managed by the cache internally
+	dc.StartUpdates(ctx, errorChannel)
 }

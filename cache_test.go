@@ -10,6 +10,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const test = "test"
+
 func getTestCache(config Config) *Cache {
 	testCache := Cache{
 		data:        sync.Map{},
@@ -18,7 +20,7 @@ func getTestCache(config Config) *Cache {
 		UpdateFuncs: make(map[string]func() (interface{}, error)),
 	}
 
-	testCache.data.Store("string", "test")
+	testCache.data.Store("string", test)
 	testCache.data.Store("int", 1)
 	testCache.data.Store("bool", false)
 	testCache.data.Store("float", 1.1)
@@ -27,7 +29,7 @@ func getTestCache(config Config) *Cache {
 		val, ok := testCache.Get("string")
 
 		// the first update
-		if ok && val == "test" {
+		if ok && val == test {
 			return "test2", nil
 		}
 
@@ -272,6 +274,147 @@ func TestUpdateContent(t *testing.T) {
 func TestStartUpdates(t *testing.T) {
 	t.Parallel()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	errorChan := make(chan error, 1)
+
+	Convey("Given a cache with update interval set", t, func() {
+		updateCacheInterval := 20 * time.Millisecond
+		config := Config{
+			UpdateInterval: &updateCacheInterval,
+		}
+
+		testCache := getTestCache(config)
+
+		Convey("When StartUpdates is called", func() {
+			go testCache.StartUpdates(ctx, errorChan)
+
+			Convey("Then cache data should be updated periodically", func() {
+				// Wait for one update cycle to complete
+				time.Sleep(updateCacheInterval + 10*time.Millisecond)
+
+				cacheStringValue, ok := testCache.Get("string")
+				So(cacheStringValue, ShouldEqual, "test2")
+				So(ok, ShouldBeTrue)
+
+				cacheIntValue, ok := testCache.Get("int")
+				So(cacheIntValue, ShouldEqual, 2)
+				So(ok, ShouldBeTrue)
+
+				cacheBoolValue, ok := testCache.Get("bool")
+				So(cacheBoolValue, ShouldBeTrue)
+				So(ok, ShouldBeTrue)
+
+				cacheFloatValue, ok := testCache.Get("float")
+				So(cacheFloatValue, ShouldEqual, 2.2)
+				So(ok, ShouldBeTrue)
+
+				// Wait for a second update cycle
+				time.Sleep(updateCacheInterval)
+
+				cacheStringValue, ok = testCache.Get("string")
+				So(cacheStringValue, ShouldEqual, "test3")
+				So(ok, ShouldBeTrue)
+
+				cacheIntValue, ok = testCache.Get("int")
+				So(cacheIntValue, ShouldEqual, 3)
+				So(ok, ShouldBeTrue)
+
+				cacheBoolValue, ok = testCache.Get("bool")
+				So(cacheBoolValue, ShouldBeFalse)
+				So(ok, ShouldBeTrue)
+
+				cacheFloatValue, ok = testCache.Get("float")
+				So(cacheFloatValue, ShouldEqual, 3.3)
+				So(ok, ShouldBeTrue)
+
+				Convey("And closing the cache should stop updates", func() {
+					testCache.Close()
+
+					// Give some time to ensure no more updates occur
+					time.Sleep(updateCacheInterval + 10*time.Millisecond)
+
+					cacheStringValue, ok = testCache.Get("string")
+					So(cacheStringValue, ShouldEqual, "") // No further updates expected
+					So(ok, ShouldBeTrue)
+				})
+			})
+		})
+	})
+
+	Convey("Given a cache with no update functions", t, func() {
+		updateCacheInterval := 10 * time.Millisecond
+		config := Config{
+			UpdateInterval: &updateCacheInterval,
+		}
+
+		testCache := getTestCache(config)
+		testCache.UpdateFuncs = make(map[string]func() (interface{}, error)) // No update functions
+
+		Convey("When StartUpdates is called", func() {
+			testCache.StartUpdates(ctx, errorChan)
+
+			Convey("Then no updates should be performed", func() {
+				time.Sleep(updateCacheInterval + 10*time.Millisecond)
+
+				cacheStringValue, ok := testCache.Get("string")
+				So(cacheStringValue, ShouldEqual, "test") // Original value remains
+				So(ok, ShouldBeTrue)
+
+				cacheIntValue, ok := testCache.Get("int")
+				So(cacheIntValue, ShouldEqual, 1) // Original value remains
+				So(ok, ShouldBeTrue)
+
+				cacheBoolValue, ok := testCache.Get("bool")
+				So(cacheBoolValue, ShouldBeFalse) // Original value remains
+				So(ok, ShouldBeTrue)
+
+				cacheFloatValue, ok := testCache.Get("float")
+				So(cacheFloatValue, ShouldEqual, 1.1) // Original value remains
+				So(ok, ShouldBeTrue)
+			})
+		})
+	})
+
+	Convey("Given a cache with no update interval but has update functions", t, func() {
+		// Configure the cache without an update interval
+		config := Config{
+			UpdateInterval: nil, // No interval
+		}
+
+		testCache := getTestCache(config)
+
+		Convey("When StartUpdates is called", func() {
+			testCache.StartUpdates(ctx, errorChan)
+
+			Convey("Then cache data should not be periodically updated", func() {
+				// Wait to ensure no updates occur
+				time.Sleep(50 * time.Millisecond) // Arbitrary delay to check for updates
+
+				cacheStringValue, ok := testCache.Get("string")
+				So(cacheStringValue, ShouldEqual, "test") // Should match the initial value
+				So(ok, ShouldBeTrue)
+
+				cacheIntValue, ok := testCache.Get("int")
+				So(cacheIntValue, ShouldEqual, 1)
+				So(ok, ShouldBeTrue)
+
+				cacheBoolValue, ok := testCache.Get("bool")
+				So(cacheBoolValue, ShouldBeFalse)
+				So(ok, ShouldBeTrue)
+
+				cacheFloatValue, ok := testCache.Get("float")
+				So(cacheFloatValue, ShouldEqual, 1.1)
+				So(ok, ShouldBeTrue)
+			})
+		})
+	})
+}
+
+func TestStartAndManageUpdates(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	errorChan := make(chan error, 1)
 
@@ -283,8 +426,8 @@ func TestStartUpdates(t *testing.T) {
 
 		testCache := getTestCache(config)
 
-		Convey("When StartUpdates is called", func() {
-			go testCache.StartUpdates(ctx, errorChan)
+		Convey("When StartAndManageUpdates is called", func() {
+			go testCache.StartAndManageUpdates(ctx, errorChan)
 
 			Convey("Then cache data should be updated immediately", func() {
 				// give time for go-routine to update in test but this time is less than the update interval
@@ -321,7 +464,7 @@ func TestStartUpdates(t *testing.T) {
 
 		testCache := getTestCache(config)
 
-		go testCache.StartUpdates(ctx, errorChan)
+		go testCache.StartAndManageUpdates(ctx, errorChan)
 
 		Convey("When the updateInterval time has passed", func() {
 			time.Sleep(updateCacheInterval)
@@ -363,7 +506,7 @@ func TestStartUpdates(t *testing.T) {
 		testCache.UpdateFuncs = make(map[string]func() (interface{}, error), 0)
 
 		Convey("When StartUpdates is called", func() {
-			testCache.StartUpdates(ctx, errorChan)
+			testCache.StartAndManageUpdates(ctx, errorChan)
 
 			Convey("Then cache data should not be updated", func() {
 				cacheStringValue, ok := testCache.Get("string")
@@ -393,7 +536,7 @@ func TestStartUpdates(t *testing.T) {
 		testCache := getTestCache(config)
 
 		Convey("When StartUpdates is called", func() {
-			testCache.StartUpdates(ctx, errorChan)
+			testCache.StartAndManageUpdates(ctx, errorChan)
 
 			Convey("Then cache data should be updated/loaded once", func() {
 				cacheStringValue, ok := testCache.Get("string")
