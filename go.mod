@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-cache
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/ONSdigital/log.go/v2 v2.4.3
@@ -23,5 +23,5 @@ require (
 	go.opentelemetry.io/otel v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.43.1-0.20260408233230-690c91f6ecf3 // indirect
 )
